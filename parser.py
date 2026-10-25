@@ -18,7 +18,7 @@ class MapParser:
         """ nb_dronesの値を返す
 
         Args:
-            nb_drone(int): Mapファイルから読み取ったnb_dronesの値
+            nb_drone(str): Mapファイルから読み取ったnb_dronesの値
 
         Returns:
             int: intに変換したnb_dronesの値。
@@ -33,11 +33,27 @@ class MapParser:
             raise ParseError("Values must be specified as numbers.")
         return int(nb_drones)
 
-    def start_parse(self, start_hub: str) -> None:
+    def _additional_info_parse(self, info: str) -> tuple[str, str, str]:
+        ''' Hubの追加条件をパースする
+
+        Args:
+            info(str): Mapファイルから読み取ったHubの追加情報全文
+
+        Returns:
+            dict: 追加情報(xxxx=yyyy)をkey/valueに分割して格納した辞書。
+
+        Raises:
+            ParseError: nb_dronesに数字以外が設定されているnb_dronesの値が負の値。
+
+        Examples:
+            使用例を記載する（doctest形式も可能）。
+        '''
+
+    def _hub_parse(self, value: str, role: HubRole) -> None:
         """ starting zoneの情報をパースする
 
         Args:
-            nb_drone(int): Mapファイルから読み取ったnb_dronesの値
+            start_hub(str): Mapファイルから読み取ったstart_hubの値
 
         Returns:
             int: intに変換したnb_dronesの値。
@@ -48,29 +64,89 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-
-        # split()の返り値を複数変数で受けるのは無理なので一旦リストで受け取る
         # ' 'でsplit()しようとすると、追加情報[xxx xxx]もsplitされるので
         # 先に[xxx xxx]情報があるかどうかを調べる
+        mandatory_info, _, additional_info = value.partition('[')
+        # [xxx xxx]が含まれているの場合はこれをパース
+        meta = self._additional_info_parse(additional_info.strip(']')
 
-    def end_parse(self, end_hub: str) -> None:
-        """ end zoneの情報をパースする
+        kwargs: dict[str: Any] = {}
+        if 'zone' in meta:
+            kwargs['zone_type'] = meta['zone']
+        if 'color' in meta:
+            kwargs['color'] = meta['color']
+        if 'max_drones' in meta:
+            kwargs['max_drones'] = meta['max_drones']
+        # 前後の空白を除いたうえで、' 'で分割
+        splited_shub = mandatory_info.strip().split(' ')
+        if len(splited_shub) != 3:
+            raise ParseError('Please enter it in the following format: (start_hub: name 0 0)')
+        try:
+            x_coord = int(splited_shub[1])
+            y_coord = int(splited_shub[2])
+        except Error as e:
+            print(e)
+        return Hub(name=splited_shub[0],
+                   cordinates=(x_coord, y_coord),
+                   hub_role=role,
+                   **kwargs
+                   )
+
+
+    def start_parse(self, start_hub: str) -> None:
+        """ start zoneの情報をパースする
 
         Args:
-            nb_drone(int): Mapファイルから読み取ったnb_dronesの値
+            start_hub(int): Mapファイルから読み取ったstart_hubの値
 
         Returns:
-            int: intに変換したnb_dronesの値。
+            Hub: パースした情報から作成した、Hubインスタンス
 
         Raises:
-            ParseError: nb_dronesに数字以外が設定されているnb_dronesの値が負の値。
+            ParseError: 
+            ValidationError:
 
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
+        return _parse_zone(start_hub, HubRole.start) 
+
+
+    def end_parse(self, end_hub: str) -> None:
+        """ start zoneの情報をパースする
+
+        Args:
+            start_hub(int): Mapファイルから読み取ったstart_hubの値
+
+        Returns:
+            Hub: パースした情報から作成した、Hubインスタンス
+
+        Raises:
+            ParseError: 
+            ValidationError:
+
+        Examples:
+            使用例を記載する（doctest形式も可能）。
+        """
+       return _parse_zone(end_hub, HubRole.END) 
 
     def hub_parse(self, hub: str) -> None:
-        ...
+        """ zoneの情報をパースする
+
+        Args:
+            hub(int): Mapファイルから読み取ったhubの値
+
+        Returns:
+            Hub: パースした情報から作成した、Hubインスタンス
+
+        Raises:
+            ParseError: 
+            ValidationError:
+
+        Examples:
+            使用例を記載する（doctest形式も可能）。
+        """
+       return _parse_zone(end_hub, HubRole.HUB) 
 
     def connection_parse(self, connection: str) -> None:
         ...

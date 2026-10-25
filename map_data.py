@@ -51,7 +51,7 @@ class Hub(BaseModel):
     Hubの情報を保持するデータクラス
     '''
     name: str = Field(max_length=256)
-    cordinate: tuple[int, int]
+    cordinates: tuple[int, int]
     color: str = Field(max_length = 256)
     hub_role: HubRole = HubRole.HUB
     zone_type: ZoneType = ZoneType.NORMAL
