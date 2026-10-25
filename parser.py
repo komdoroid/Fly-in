@@ -16,7 +16,6 @@ class MapParser:
 
     def nb_drones_parse(self, nb_drones: str) -> int:
         """ nb_dronesの値を返す
-        ここに必要に応じて、関数の詳細な説明を複数行で記述する。
 
         Args:
             nb_drone(int): Mapファイルから読み取ったnb_dronesの値
@@ -32,16 +31,43 @@ class MapParser:
         """
         if not nb_drones.isdigit():
             raise ParseError("Values must be specified as numbers.")
-        nb_drones = int(nb_drones)
-        if nb_drones < 0:
-            raise ParseError("Value must be positive")
         return int(nb_drones)
 
     def start_parse(self, start_hub: str) -> None:
-        ...
+        """ starting zoneの情報をパースする
+
+        Args:
+            nb_drone(int): Mapファイルから読み取ったnb_dronesの値
+
+        Returns:
+            int: intに変換したnb_dronesの値。
+
+        Raises:
+            ParseError: nb_dronesに数字以外が設定されているnb_dronesの値が負の値。
+
+        Examples:
+            使用例を記載する（doctest形式も可能）。
+        """
+
+        # split()の返り値を複数変数で受けるのは無理なので一旦リストで受け取る
+        # ' 'でsplit()しようとすると、追加情報[xxx xxx]もsplitされるので
+        # 先に[xxx xxx]情報があるかどうかを調べる
 
     def end_parse(self, end_hub: str) -> None:
-        ...
+        """ end zoneの情報をパースする
+
+        Args:
+            nb_drone(int): Mapファイルから読み取ったnb_dronesの値
+
+        Returns:
+            int: intに変換したnb_dronesの値。
+
+        Raises:
+            ParseError: nb_dronesに数字以外が設定されているnb_dronesの値が負の値。
+
+        Examples:
+            使用例を記載する（doctest形式も可能）。
+        """
 
     def hub_parse(self, hub: str) -> None:
         ...
