@@ -17,6 +17,12 @@ class MapKeyType(Enum):
     CONNECTION = 'connection'
 
 
+UNIQU_KEYS = set(
+        MapKeyType.NB_DRONES,
+        MapKeyType.START_HUb,
+        MapKeyType.END_HUB
+        )
+
 class MapParser:
     def __init__(self, map_file: str) -> None:
         self.map_file: str = map_file
@@ -185,13 +191,18 @@ class MapParser:
             使用例を記載する（doctest形式も可能）。
         """
         with open(self.map_file, 'r') as f:
+            seen: set[MapKeyType] = set()
             for line_nb, line in enumerate(f, start=1):
                 content = line.partition('#')[0].strip()
                 if not content:
                     continue
                 key, sep, value = content.partition(':')
                 key, value = key.strip(), value.strip()
-                print(f'key: {key}, sep: {sep}, value: {value}')
+                key_type = MapKeyType(key)
+                if key_type in UNIQU_KEYS:
+                    if key_type in seen:
+                        raise ParseError(f"line {line_nb}: '{key_type.value}' is defined more than once")
+                    seen.add(key_type)
                 if not sep:
                     raise ParseError(f"{line_nb}: The separator in the map file is incorrect")
                 match key:
@@ -207,6 +218,9 @@ class MapParser:
                         self.connection_list.append(self.connection_parse(value))
                     case _:
                         raise ParseError(f"{line_nb}: The key name in the map file is incorrect")
+            
+            # ループ後にUNIQU_KEYSの中から出現しなかったものをチェック
+            # connectionのパーサーまだ書いてない
 
 
 class ParseError(Exception):
