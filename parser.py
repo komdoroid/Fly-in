@@ -1,18 +1,28 @@
+from enum import Enum
+from map_data import (
+        HubRole,
+        ZoneType,
+        MapData,
+        GraphStructure,
+        Hub,
+        Connection
+        )
+
+
+class MapKeyType(Enum):
+    NB_DRONES = 'nb_drones'
+    START_HUB = 'start_hub'
+    END_HUB = 'end_hub'
+    HUB = 'hub'
+    CONNECTION = 'connection'
+
+
 class MapParser:
     def __init__(self, map_file: str) -> None:
         self.map_file: str = map_file
-        # self.nb_drones: int
-        # self.start_hub
-        # self.end_hub
-        # self.hubs: dict
-        # self.connection: dict
-        self.operations = {
-                'nb_drones': self.nb_drones_parse,
-                'start_hub': self.start_parse,
-                'end_hub': self.end_parse,
-                'hub': self.hub_parse,
-                'connection': self.connection_parse
-                }
+        self.nb_drones: int
+        self.hub_list: list[Hub] = []
+        self.connection_list: list[Hub] = []
 
     def nb_drones_parse(self, nb_drones: str) -> int:
         """ nb_dronesの値を返す
@@ -43,13 +53,17 @@ class MapParser:
             dict: 追加情報(xxxx=yyyy)をkey/valueに分割して格納した辞書。
 
         Raises:
-            ParseError: nb_dronesに数字以外が設定されているnb_dronesの値が負の値。
+            ParseError: 'key1=value1 key2=value2'の形式でない場合
 
         Examples:
             使用例を記載する（doctest形式も可能）。
         '''
+        try:
+            return dict(pair.split('=') for pair in info.split())
+        except ValueError as e:
+            raise ParseError(e)
 
-    def _hub_parse(self, value: str, role: HubRole) -> None:
+    def _parse_zone(self, value: str, role: HubRole) -> None:
         """ starting zoneの情報をパースする
 
         Args:
@@ -68,7 +82,7 @@ class MapParser:
         # 先に[xxx xxx]情報があるかどうかを調べる
         mandatory_info, _, additional_info = value.partition('[')
         # [xxx xxx]が含まれているの場合はこれをパース
-        meta = self._additional_info_parse(additional_info.strip(']')
+        meta = self._additional_info_parse(additional_info.strip(']'))
 
         kwargs: dict[str: Any] = {}
         if 'zone' in meta:
@@ -109,7 +123,7 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return _parse_zone(start_hub, HubRole.start) 
+        return self._parse_zone(start_hub, HubRole.START.value) 
 
 
     def end_parse(self, end_hub: str) -> None:
@@ -128,7 +142,7 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-       return _parse_zone(end_hub, HubRole.END) 
+        return self._parse_zone(end_hub, HubRole.END.value)
 
     def hub_parse(self, hub: str) -> None:
         """ zoneの情報をパースする
@@ -146,7 +160,7 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-       return _parse_zone(end_hub, HubRole.HUB) 
+        return self._parse_zone(hub, HubRole.HUB.value) 
 
     def connection_parse(self, connection: str) -> None:
         ...
@@ -175,17 +189,24 @@ class MapParser:
                 content = line.partition('#')[0].strip()
                 if not content:
                     continue
-                if not content.startswith(
-                        tuple(self.operations.keys())
-                        ):
-                    raise ParseError("The key name in the map file is incorrect")
                 key, sep, value = content.partition(':')
+                key, value = key.strip(), value.strip()
+                print(f'key: {key}, sep: {sep}, value: {value}')
                 if not sep:
-                    raise ParseError("The separator in the map file is incorrect")
-                operation = self.operations.get(key.strip())
-                if not operation:
-                    raise ParseError("The key name in the map file is incorrect")
-                operation(value.strip())
+                    raise ParseError(f"{line_nb}: The separator in the map file is incorrect")
+                match key:
+                    case MapKeyType.NB_DRONES.value:
+                        self.nb_drones = self.nb_drones_parse(value)
+                    case MapKeyType.START_HUB.value:
+                        self.hub_list.append(self.start_parse(value))
+                    case MapKeyType.END_HUB.value:
+                        self.hub_list.append(self.end_parse(value))
+                    case MapKeyType.HUB.value:
+                        self.hub_list.append(self.hub_parse(value))
+                    case MapKeyType.CONNECTION.value:
+                        self.connection_list.append(self.connection_parse(value))
+                    case _:
+                        raise ParseError(f"{line_nb}: The key name in the map file is incorrect")
 
 
 class ParseError(Exception):

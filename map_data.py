@@ -30,22 +30,6 @@ class ZoneType(Enum):
     PRIORITY = 'priority'
 
 
-class MapData(BaseModel):
-    '''
-    Mapのデータを保持するデータクラス
-    '''
-    nb_drones: int = Field(ge=1)
-    graph_structure: GraphStructure
-
-
-class GraphStructure(BaseModel):
-    '''
-    MapのGraph構造を保持するデータクラス
-    '''
-    hub_list: list[Hub] = Field(min_length=2)
-    connection_list: list[Connection] = Field(min_length=1)
-
-
 class Hub(BaseModel):
     '''
     Hubの情報を保持するデータクラス
@@ -64,3 +48,19 @@ class Connection(BaseModel):
     '''
     connected_hub: tuple[str, str]
     max_link_capacity: int | None = 1
+
+
+class GraphStructure(BaseModel):
+    '''
+    MapのGraph構造を保持するデータクラス
+    '''
+    hub_list: list[Hub] = Field(min_length=2)
+    connection_list: list[Connection] = Field(min_length=1)
+
+
+class MapData(BaseModel):
+    '''
+    Mapのデータを保持するデータクラス
+    '''
+    nb_drones: int = Field(ge=1)
+    graph_structure: GraphStructure
