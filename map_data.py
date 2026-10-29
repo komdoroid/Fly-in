@@ -19,14 +19,14 @@ class ZoneType(Enum):
     '''Zoneの種類をまとめたEnum
 
     Attributes:
-        NORMAL: 通常のZone 
+        NORMAL: 通常のZone
         BLOCKED: 立ち入り禁止Zone
         RESTRICTED: 移動に2ターンかかるZone
         PRIORITY: 優先的に使用されるZone
     '''
     NORMAL = 'normal'
     BLOCKED = 'blocked'
-    RESTRICTED = 'restricted' 
+    RESTRICTED = 'restricted'
     PRIORITY = 'priority'
 
 
@@ -36,7 +36,7 @@ class Hub(BaseModel):
     '''
     name: str = Field(max_length=256)
     cordinates: tuple[int, int]
-    color: str = Field(max_length = 256)
+    color: str = Field(max_length=256)
     hub_role: HubRole = HubRole.HUB
     zone_type: ZoneType = ZoneType.NORMAL
     max_drones: int | None = 1

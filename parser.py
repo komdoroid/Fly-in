@@ -1,3 +1,4 @@
+from typing import Any
 from enum import Enum
 from map_data import (
         HubRole,
@@ -17,11 +18,12 @@ class MapKeyType(Enum):
     CONNECTION = 'connection'
 
 
-UNIQU_KEYS = set(
+UNIQU_KEYS: set[MapKeyType, MapKeyType, MapKeyType] = set(
         MapKeyType.NB_DRONES,
-        MapKeyType.START_HUb,
+        MapKeyType.START_HUB,
         MapKeyType.END_HUB
         )
+
 
 class MapParser:
     def __init__(self, map_file: str) -> None:
@@ -49,7 +51,7 @@ class MapParser:
             raise ParseError("Values must be specified as numbers.")
         return int(nb_drones)
 
-    def _additional_info_parse(self, info: str) -> tuple[str, str, str]:
+    def _additional_info_parse(self, info: str) -> dict[str, Any]:
         ''' Hubの追加条件をパースする
 
         Args:
@@ -69,7 +71,7 @@ class MapParser:
         except ValueError as e:
             raise ParseError(e)
 
-    def _parse_zone(self, value: str, role: HubRole) -> None:
+    def _parse_zone(self, value: str, role: str) -> Hub:
         """ starting zoneの情報をパースする
 
         Args:
@@ -88,9 +90,10 @@ class MapParser:
         # 先に[xxx xxx]情報があるかどうかを調べる
         mandatory_info, _, additional_info = value.partition('[')
         # [xxx xxx]が含まれているの場合はこれをパース
-        meta = self._additional_info_parse(additional_info.strip(']'))
+        meta: dict[str, Any] = self._additional_info_parse(
+            additional_info.strip(']'))
 
-        kwargs: dict[str: Any] = {}
+        kwargs: dict[str, Any] = {}
         if 'zone' in meta:
             kwargs['zone_type'] = meta['zone']
         if 'color' in meta:
@@ -100,7 +103,10 @@ class MapParser:
         # 前後の空白を除いたうえで、' 'で分割
         splited_shub = mandatory_info.strip().split(' ')
         if len(splited_shub) != 3:
-            raise ParseError('Please enter it in the following format: (start_hub: name 0 0)')
+            raise ParseError(
+                    'Please enter it in the following format'
+                    ': (start_hub: name 0 0)'
+                    )
         try:
             x_coord = int(splited_shub[1])
             y_coord = int(splited_shub[2])
@@ -112,8 +118,7 @@ class MapParser:
                    **kwargs
                    )
 
-
-    def start_parse(self, start_hub: str) -> None:
+    def start_parse(self, start_hub: str) -> Hub:
         """ start zoneの情報をパースする
 
         Args:
@@ -123,16 +128,15 @@ class MapParser:
             Hub: パースした情報から作成した、Hubインスタンス
 
         Raises:
-            ParseError: 
+            ParseError:
             ValidationError:
 
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return self._parse_zone(start_hub, HubRole.START.value) 
+        return self._parse_zone(start_hub, HubRole.START.value)
 
-
-    def end_parse(self, end_hub: str) -> None:
+    def end_parse(self, end_hub: str) -> Hub:
         """ start zoneの情報をパースする
 
         Args:
@@ -142,7 +146,7 @@ class MapParser:
             Hub: パースした情報から作成した、Hubインスタンス
 
         Raises:
-            ParseError: 
+            ParseError:
             ValidationError:
 
         Examples:
@@ -150,7 +154,7 @@ class MapParser:
         """
         return self._parse_zone(end_hub, HubRole.END.value)
 
-    def hub_parse(self, hub: str) -> None:
+    def hub_parse(self, hub: str) -> Hub:
         """ zoneの情報をパースする
 
         Args:
@@ -166,10 +170,27 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return self._parse_zone(hub, HubRole.HUB.value) 
+        return self._parse_zone(hub, HubRole.HUB.value)
 
-    def connection_parse(self, connection: str) -> None:
-        ...
+    def connection_parse(self, value: str) -> Connection:
+        # 追加情報があるか確認
+        mandatory_info, _, additional_info = value.partition('[')
+        # [xxx xxx]が含まれているの場合はこれをパース
+        meta = self._additional_info_parse(additional_info.strip(']'))
+
+        kwargs: dict[str, Any] = {}
+        if 'max_link_capacity' in meta:
+            kwargs['max_link_capacity'] = meta['max_link_capacity']
+        splited_connection = mandatory_info.strip().split('-')
+        if len(splited_connection) != 2:
+            raise ParseError(
+                    'Please enter it in the following format'
+                    ': (connection: hub1-roof1)'
+                    )
+        return Connection(
+                connected_hub=splited_connection,
+                **kwargs
+                )
 
     def main_process(self) -> None:
         """関数の概要を1行で簡潔に記述する（サマリー行）。
@@ -201,10 +222,15 @@ class MapParser:
                 key_type = MapKeyType(key)
                 if key_type in UNIQU_KEYS:
                     if key_type in seen:
-                        raise ParseError(f"line {line_nb}: '{key_type.value}' is defined more than once")
+                        raise ParseError(
+                                f"line {line_nb}: "
+                                f"'{key_type.value}' is defined more than once"
+                                )
                     seen.add(key_type)
                 if not sep:
-                    raise ParseError(f"{line_nb}: The separator in the map file is incorrect")
+                    raise ParseError(
+                            f"{line_nb}: "
+                            "The separator in the map file is incorrect")
                 match key:
                     case MapKeyType.NB_DRONES.value:
                         self.nb_drones = self.nb_drones_parse(value)
@@ -215,12 +241,19 @@ class MapParser:
                     case MapKeyType.HUB.value:
                         self.hub_list.append(self.hub_parse(value))
                     case MapKeyType.CONNECTION.value:
-                        self.connection_list.append(self.connection_parse(value))
+                        self.connection_list.append(
+                                self.connection_parse(value)
+                                )
                     case _:
-                        raise ParseError(f"{line_nb}: The key name in the map file is incorrect")
-            
+                        raise ParseError(
+                                f"{line_nb}: "
+                                "The key name in the map file is incorrect")
             # ループ後にUNIQU_KEYSの中から出現しなかったものをチェック
-            # connectionのパーサーまだ書いてない
+            if not (UNIQU_KEYS - seen):
+                raise ParseError(f"line {line_nb}: "
+                                 "Missing required key(s) "
+                                 f"{UNIQU_KEYS - seen}"
+                                 )
 
 
 class ParseError(Exception):
