@@ -18,10 +18,12 @@ class MapKeyType(Enum):
     CONNECTION = 'connection'
 
 
-UNIQU_KEYS: set[MapKeyType, MapKeyType, MapKeyType] = set(
-        MapKeyType.NB_DRONES,
-        MapKeyType.START_HUB,
-        MapKeyType.END_HUB
+UNIQU_KEYS: set[MapKeyType] = set(
+        {
+            MapKeyType.NB_DRONES,
+            MapKeyType.START_HUB,
+            MapKeyType.END_HUB
+        }
         )
 
 
@@ -30,7 +32,7 @@ class MapParser:
         self.map_file: str = map_file
         self.nb_drones: int
         self.hub_list: list[Hub] = []
-        self.connection_list: list[Hub] = []
+        self.connection_list: list[Connection] = []
 
     def nb_drones_parse(self, nb_drones: str) -> int:
         """ nb_dronesの値を返す
@@ -110,7 +112,7 @@ class MapParser:
         try:
             x_coord = int(splited_shub[1])
             y_coord = int(splited_shub[2])
-        except Error as e:
+        except ValueError as e:
             print(e)
         return Hub(name=splited_shub[0],
                    cordinates=(x_coord, y_coord),
@@ -192,7 +194,7 @@ class MapParser:
                 **kwargs
                 )
 
-    def main_process(self) -> None:
+    def main_process(self) -> MapData:
         """関数の概要を1行で簡潔に記述する（サマリー行）。
 
         ここに必要に応じて、関数の詳細な説明を複数行で記述する。
@@ -249,11 +251,18 @@ class MapParser:
                                 f"{line_nb}: "
                                 "The key name in the map file is incorrect")
             # ループ後にUNIQU_KEYSの中から出現しなかったものをチェック
-            if not (UNIQU_KEYS - seen):
-                raise ParseError(f"line {line_nb}: "
-                                 "Missing required key(s) "
-                                 f"{UNIQU_KEYS - seen}"
-                                 )
+        if (UNIQU_KEYS - seen):
+            raise ParseError(f"line {line_nb}: "
+                             "Missing required key(s) "
+                             f"{UNIQU_KEYS - seen}"
+                             )
+        # 最後にMapData Classにデータを詰めてreturn
+        return MapData(nb_drones=self.nb_drones,
+                       graph_structure=GraphStructure(
+                           hub_list=self.hub_list,
+                           connection_list=self.connection_list
+                           )
+                       )
 
 
 class ParseError(Exception):
