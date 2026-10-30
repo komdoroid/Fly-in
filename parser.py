@@ -2,7 +2,6 @@ from typing import Any
 from enum import Enum
 from map_data import (
         HubRole,
-        ZoneType,
         MapData,
         GraphStructure,
         Hub,
