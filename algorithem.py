@@ -68,6 +68,7 @@ class PathFinder:
 
             for v in graph[zone]:
                 zone_type = self.hubs_by_name[v].zone_type
+                # tupleの要素を３に変更。priorityの場合はtupleの２つ目の項目を-1
                 if (zone_type == ZoneType.NORMAL
                         or zone_type == ZoneType.PRIORITY):
                     weight = 1
