@@ -1,20 +1,34 @@
 import heapq
+from map_data import (GraphStructure)
 
 
-class SimulationEngine():
+class PathFinder:
+    def __init__(self, graph_structure: GraphStructure) -> None:
+        self.adjacency_list = self._build_adjacency_list(graph_structure)
+
+    def _build_adjacency_list(
+            self,
+            gs: GraphStructure
+            ) -> dict[str, tuple[str, float]]:
+        adj_list: dict[str, tuple[str, float]] = {}
+        for hub in gs.hub_list:
+            next_hub = []
+            target_hub = hub.name
+            for connection in gs.connection_list:
+                if target_hub in connection.connected_hub:
+                    if hub.name == connection.connected_hub[0]:
+                        next_hub.append(connection.connected_hub[1])
+                    else:
+                        next_hub.append(connection.connected_hub[0])
+            adj_list[target_hub] = next_hub
+
+        return adj_list
+
+
     def get_shortest_path(
             self,
             graph,
             start) -> tuple[dict[str, float], dict[str, str]]:
-        # 必要変数
-        # 隣接リスト：dict[name: list[next_zone]]
-        # 到達コスト保持：dict[name: tuple[cost, pre_zone]]
-        # RETURN：STARTからGOALまでの移動ZONE名リストlist[str]
-        # 開始条件：スタート地点（共通）
-        # 継続条件：隣接リストから到達可能なzoneを取得
-        # コストを計算
-        # 最低コストで到達コストを更新
-        # 終了条件：ゴール地点（共通）
 
         min_turns: dict[str, float] = {node: float('inf') for node in graph}
         min_turns[start] = 0
@@ -27,6 +41,8 @@ class SimulationEngine():
 
         while queue:
             cost, zone = heapq.heappop(queue)
+
+            # すでにより短い経路が見つかっている場合はこのデータは無視
             if cost > min_turns[zone]:
                 continue
 

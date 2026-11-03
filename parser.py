@@ -72,7 +72,7 @@ class MapParser:
         except ValueError as e:
             raise ParseError(e)
 
-    def _parse_zone(self, value: str, role: str) -> Hub:
+    def _parse_zone(self, value: str, role: HubRole) -> Hub:
         """ starting zoneの情報をパースする
 
         Args:
@@ -114,7 +114,7 @@ class MapParser:
         except ValueError as e:
             print(e)
         return Hub(name=splited_shub[0],
-                   cordinates=(x_coord, y_coord),
+                   coordinates=(x_coord, y_coord),
                    hub_role=role,
                    **kwargs
                    )

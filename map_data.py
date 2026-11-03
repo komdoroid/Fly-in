@@ -48,6 +48,7 @@ class Connection(BaseModel):
     '''
     connected_hub: tuple[str, str]
     max_link_capacity: int | None = 1
+    # zoneA-zoneB, zoneB-zoneAのような重複がないことを保証する必要がある
 
 
 class GraphStructure(BaseModel):
