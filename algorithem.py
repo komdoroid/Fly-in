@@ -45,7 +45,7 @@ class PathFinder:
 
         return adj_list
 
-    def find_path(
+    def build_path_info(
             self,
             graph,
             start) -> tuple[dict[str, float], dict[str, str]]:
@@ -57,10 +57,10 @@ class PathFinder:
         prev: dict[str, str] = {}
 
         # 優先度付きキュー
-        queue: list[tuple[float, str]] = [(0, start)]
+        queue: list[tuple[float, int, str]] = [(0, 0, start)]
 
         while queue:
-            cost, zone = heapq.heappop(queue)
+            cost, priority_index, zone = heapq.heappop(queue)
 
             # すでにより短い経路が見つかっている場合はこのデータは無視
             if cost > min_turns[zone]:
@@ -68,15 +68,25 @@ class PathFinder:
 
             for v in graph[zone]:
                 zone_type = self.hubs_by_name[v].zone_type
-                # tupleの要素を３に変更。priorityの場合はtupleの２つ目の項目を-1
-                if (zone_type == ZoneType.NORMAL
-                        or zone_type == ZoneType.PRIORITY):
+                if zone_type == ZoneType.NORMAL:
                     weight = 1
                 if zone_type == ZoneType.RESTRICTED:
                     weight = 2
+                if zone_type == ZoneType.PRIORITY:
+                    # tupleの要素は前から評価して、ソートされる
+                    weight = 1
+                    priority_index -= 1
                 new_cost = cost + weight
+
+                # 同じコストで到達可能な場合は先に評価したルートが優先される
+                # つまり'priority_index'が小さい方が優先
                 if new_cost < min_turns[v]:
                     min_turns[v] = new_cost
                     prev[v] = zone
                     heapq.heappush(queue, (new_cost, v))
         return min_turns, prev
+
+    def find_path(self) -> None:
+        # start_hubとend_hubを求める必要がある
+        # @static関数として定義して、結果はインスタンス変数として保持
+        self.build_path_info(self.adjacency_list, )
