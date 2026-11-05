@@ -13,6 +13,9 @@ from map_data import (
 
 class PathFinder:
     def __init__(self, graph_structure: GraphStructure) -> None:
+        # GraphStructure()にstart, end hubを追加しておくこと
+        # このアルゴリズムが意図したとおりに動くことを確認する事
+        # SimulationEngineを実装して全体のドローンの動きを制御する事
         self.start_hub = graph_structure.start_hub
         self.end_hub = graph_structure.end_hub
         self.hubs_by_name: dict[str, Hub] = self._build_hubs_by_name(
