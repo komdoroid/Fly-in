@@ -13,6 +13,8 @@ from map_data import (
 
 class PathFinder:
     def __init__(self, graph_structure: GraphStructure) -> None:
+        self.start_hub = graph_structure.start_hub
+        self.end_hub = graph_structure.end_hub
         self.hubs_by_name: dict[str, Hub] = self._build_hubs_by_name(
                 graph_structure.hub_list)
         self.adjacency_list: dict[str, list[str]] = self._build_adjacency_list(
@@ -47,8 +49,8 @@ class PathFinder:
 
     def build_path_info(
             self,
-            graph,
-            start) -> tuple[dict[str, float], dict[str, str]]:
+            graph: dict[str, list[str]],
+            start: str) -> tuple[dict[str, float], dict[str, str]]:
 
         min_turns: dict[str, float] = {node: float('inf') for node in graph}
         min_turns[start] = 0
@@ -83,10 +85,20 @@ class PathFinder:
                 if new_cost < min_turns[v]:
                     min_turns[v] = new_cost
                     prev[v] = zone
-                    heapq.heappush(queue, (new_cost, v))
+                    heapq.heappush(queue, (new_cost, priority_index, v))
         return min_turns, prev
 
-    def find_path(self) -> None:
-        # start_hubとend_hubを求める必要がある
-        # @static関数として定義して、結果はインスタンス変数として保持
-        self.build_path_info(self.adjacency_list, )
+    def find_path(self) -> None | list[str]:
+        start_to_end: list[str] = [self.end_hub]
+        # start_hubとend_hubのnameはGraphStructureに保持しておくべき
+        # それに伴ってHubRole()は意味をなさなくなるので削除
+        min_turns, prev = self.build_path_info(
+                self.adjacency_list,
+                self.start_hub
+                )
+        while start_to_end[-1] == self.start_hub:
+            if start_to_end[-1] not in prev:
+                return None
+            start_to_end.append(prev[start_to_end[-1]])
+        start_to_end.reverse()
+        return start_to_end
