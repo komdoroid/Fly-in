@@ -72,7 +72,7 @@ class MapParser:
         except ValueError as e:
             raise ParseError(e)
 
-    def _parse_zone(self, value: str, role: HubRole) -> Hub:
+    def _parse_zone(self, value: str, role: HubRole) -> tuple[Hub, str]:
         """ starting zoneの情報をパースする
 
         Args:
@@ -113,13 +113,14 @@ class MapParser:
             y_coord = int(splited_shub[2])
         except ValueError as e:
             print(e)
-        return Hub(name=splited_shub[0],
-                   coordinates=(x_coord, y_coord),
-                   hub_role=role,
-                   **kwargs
-                   )
+        return (Hub(name=splited_shub[0],
+                    coordinates=(x_coord, y_coord),
+                    hub_role=role.value,
+                    **kwargs
+                    ),
+                splited_shub[0])
 
-    def start_parse(self, start_hub: str) -> Hub:
+    def start_parse(self, start_hub: str) -> tuple[Hub, str]:
         """ start zoneの情報をパースする
 
         Args:
@@ -135,9 +136,9 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return self._parse_zone(start_hub, HubRole.START.value)
+        return self._parse_zone(start_hub, HubRole.START)
 
-    def end_parse(self, end_hub: str) -> Hub:
+    def end_parse(self, end_hub: str) -> tuple[Hub, str]:
         """ start zoneの情報をパースする
 
         Args:
@@ -153,9 +154,9 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return self._parse_zone(end_hub, HubRole.END.value)
+        return self._parse_zone(end_hub, HubRole.END)
 
-    def hub_parse(self, hub: str) -> Hub:
+    def hub_parse(self, hub: str) -> tuple[Hub, str]:
         """ zoneの情報をパースする
 
         Args:
@@ -171,7 +172,7 @@ class MapParser:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
-        return self._parse_zone(hub, HubRole.HUB.value)
+        return self._parse_zone(hub, HubRole.HUB)
 
     def connection_parse(self, value: str) -> Connection:
         # 追加情報があるか確認
@@ -236,11 +237,14 @@ class MapParser:
                     case MapKeyType.NB_DRONES.value:
                         self.nb_drones = self.nb_drones_parse(value)
                     case MapKeyType.START_HUB.value:
-                        self.hub_list.append(self.start_parse(value))
+                        hub, start_name = self.start_parse(value)
+                        self.hub_list.append(hub)
                     case MapKeyType.END_HUB.value:
-                        self.hub_list.append(self.end_parse(value))
+                        hub, end_name = self.start_parse(value)
+                        self.hub_list.append(hub)
                     case MapKeyType.HUB.value:
-                        self.hub_list.append(self.hub_parse(value))
+                        hub, _ = self.start_parse(value)
+                        self.hub_list.append(hub)
                     case MapKeyType.CONNECTION.value:
                         self.connection_list.append(
                                 self.connection_parse(value)
@@ -258,6 +262,8 @@ class MapParser:
         # 最後にMapData Classにデータを詰めてreturn
         return MapData(nb_drones=self.nb_drones,
                        graph_structure=GraphStructure(
+                           start_hub=start_name,
+                           end_hub=end_name,
                            hub_list=self.hub_list,
                            connection_list=self.connection_list
                            )

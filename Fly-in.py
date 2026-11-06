@@ -1,5 +1,6 @@
 import sys
 from map_data import MapData
+from algorithem import PathFinder
 from parser import MapParser, ParseError
 
 
@@ -12,6 +13,9 @@ def flyin(map_file: str) -> None:
         print(f'connection_list: {map_data.graph_structure.connection_list}')
     except (ParseError, ValueError) as e:
         print(e)
+
+    path_finder = PathFinder(map_data.graph_structure)
+    print(path_finder.find_path())
 
 
 if __name__ == '__main__':

@@ -1,13 +1,8 @@
 import heapq
-from enum import Enum
 from map_data import (
-        HubRole,
-        MapData,
         ZoneType,
         Hub,
-        Connection,
         GraphStructure,
-        MapData
         )
 
 
@@ -72,6 +67,7 @@ class PathFinder:
                 continue
 
             for v in graph[zone]:
+                priority = priority_index
                 zone_type = self.hubs_by_name[v].zone_type
                 if zone_type == ZoneType.NORMAL:
                     weight = 1
@@ -80,7 +76,7 @@ class PathFinder:
                 if zone_type == ZoneType.PRIORITY:
                     # tupleの要素は前から評価して、ソートされる
                     weight = 1
-                    priority_index -= 1
+                    priority -= 1
                 new_cost = cost + weight
 
                 # 同じコストで到達可能な場合は先に評価したルートが優先される
@@ -88,18 +84,16 @@ class PathFinder:
                 if new_cost < min_turns[v]:
                     min_turns[v] = new_cost
                     prev[v] = zone
-                    heapq.heappush(queue, (new_cost, priority_index, v))
+                    heapq.heappush(queue, (new_cost, priority, v))
         return min_turns, prev
 
     def find_path(self) -> None | list[str]:
         start_to_end: list[str] = [self.end_hub]
-        # start_hubとend_hubのnameはGraphStructureに保持しておくべき
-        # それに伴ってHubRole()は意味をなさなくなるので削除
         min_turns, prev = self.build_path_info(
                 self.adjacency_list,
                 self.start_hub
                 )
-        while start_to_end[-1] == self.start_hub:
+        while start_to_end[-1] != self.start_hub:
             if start_to_end[-1] not in prev:
                 return None
             start_to_end.append(prev[start_to_end[-1]])

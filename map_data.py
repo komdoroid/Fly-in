@@ -55,6 +55,8 @@ class GraphStructure(BaseModel):
     '''
     MapのGraph構造を保持するデータクラス
     '''
+    start_hub: str
+    end_hub: str
     hub_list: list[Hub] = Field(min_length=2)
     connection_list: list[Connection] = Field(min_length=1)
 
