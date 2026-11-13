@@ -166,7 +166,7 @@ class MapParser:
             Hub: パースした情報から作成した、Hubインスタンス
 
         Raises:
-            ParseError: 
+            ParseError:
             ValidationError:
 
         Examples:

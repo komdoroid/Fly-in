@@ -19,14 +19,25 @@ class Drone:
         self.path: list[str]
         self.next_hub_index: int = 1
 
-    def update_place(self, zone_type: ZoneType) -> None:
-        # ZoneTypeがrestrictだった場合
-        # かつ、現在のplaceの方がstrなら次の移動先はConnection
-        # または、現在のplaceの型がtupleなら次の移動先はHub
-        ...
+    def update_place(self, next_hub: Hub) -> None:
+        if (next_hub.zone_type != ZoneType.RESTRICTED
+                or isinstance(self.place, tuple)):
+            self.place = next_hub
+            return
+
+        # Connectionに移動
+        pre_hub_name: str = self.path[self.next_hub_index - 1]
+        next_hub_name: str = self.path[self.next_hub_index]
+        next_connection: tuple = tuple(
+                sorted([pre_hub_name, next_hub_name]))
+        self.place = next_connection
 
     def increament_next_hub_index(self) -> None:
         self.next_hub_index += 1
+
+    def get_next_hub_name(self) -> str:
+        return self.path[self.next_hub_index]
+
 
 class SimulationEngine:
     def __init__(self) -> None:
@@ -42,7 +53,21 @@ class SimulationEngine:
             self.drones.append(drone)
         return drones
 
-    def advance_one_turn(self) -> None:
+    def log_processor(self, drone: Drone) -> str:
+        """ 移動したDroneインスタンスから標準出力のログ要素を作成する
+
+        Args:
+            drone: Drone
+
+        Returns:
+            None
+
+        Raises:
+
+        """
+        return f"D{drone.id}-{drone.place}"
+
+    def advance_one_turn(self) -> tuple[int, str]:
         """ 前ドローンの動きを１ターン進め、標準出力に情報を表示する。
 
         Args:
@@ -54,6 +79,21 @@ class SimulationEngine:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
+        delivered_num: int = 0
+        log_output: str = ""
+        for d in self.drones:
+            if d.next_hub_index == len(d.path):
+                delivered_num += 1
+                continue
+
+            next_zone: Hub = self.path_finder.hubs_by_name[
+                    d.get_next_hub_name()]
+
+            d.update_place(next_zone)
+            d.increament_next_hub_index()
+            log_output = log_output + " " + self.log_processor(d)
+
+        return delivered_num, log_output
 
     def run_all_turns(self) -> None:
         ...
@@ -68,3 +108,8 @@ class SimulationEngine:
         Examples:
             使用例を記載する（doctest形式も可能）。
         """
+        while True:
+            delivered_num, log_output = self.advance_one_turn()
+            print(log_output)
+            if self.drone_nums == delivered_num:
+                break
