@@ -79,8 +79,8 @@ class PathFinder:
         # min_turns: dict[tuple[hub_name, turn], float]]にする
         # turnとcost(float)は一致するので
         # min_turns: set[tuple[hub_name, turn]]が最終型？
-        min_turns: dict[str, float] = {node: float('inf') for node in graph}
-        min_turns[start] = 0
+        # min_turns: dict[str, float] = {node: float('inf') for node in graph}
+        min_turns = {(start, 0)}
 
         # 経路復元用：直前のZoneを保持
         prev: dict[str, str] = {}
@@ -92,8 +92,11 @@ class PathFinder:
             cost, priority_index, zone = heapq.heappop(queue)
 
             # すでにより短い経路が見つかっている場合はこのデータは無視
-            if cost > min_turns[zone]:
-                continue
+            # ここはおそらくもういらない
+            # if cost > min_turns[zone]:
+            #     continue
+
+            # capacityを新しい条件とする
 
             for v in graph[zone]:
                 priority = priority_index
