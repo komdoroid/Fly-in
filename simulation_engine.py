@@ -45,9 +45,9 @@ class SimulationEngine:
                  path_finder: PathFinder) -> None:
         self.drone_nums: int = drone_nums
         self.path_finder: PathFinder = path_finder
-        self.drones: list[Drone] = self.build_drones()
+        self.drones: list[Drone] = self._build_drones()
 
-    def build_drones(self) -> list[Drone]:
+    def _build_drones(self) -> list[Drone]:
         drones: list[Drone] = []
         for i in range(1, self.drone_nums + 1):
             path = self.path_finder.find_path()
@@ -71,7 +71,7 @@ class SimulationEngine:
         if isinstance(drone.place, Hub):
             return f"D{drone.id}-{drone.place.name}"
         if isinstance(drone.place, tuple):
-            return f"D{drone.id}-{"-".join(drone.place)}"
+            return f"D{drone.id}-{'-'.join(drone.place)}"
 
     def advance_one_turn(self) -> tuple[int, str]:
         """ 前ドローンの動きを１ターン進め、標準出力に情報を表示する。

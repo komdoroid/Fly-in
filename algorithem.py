@@ -2,6 +2,7 @@ import heapq
 from map_data import (
         ZoneType,
         Hub,
+        Connection,
         GraphStructure,
         )
 
@@ -11,10 +12,22 @@ class PathFinder:
         # SimulationEngineを実装して全体のドローンの動きを制御する事
         self.start_hub = graph_structure.start_hub
         self.end_hub = graph_structure.end_hub
+
         self.hubs_by_name: dict[str, Hub] = self._build_hubs_by_name(
                 graph_structure.hub_list)
-        self.adjacency_list: dict[str, list[str]] = self._build_adjacency_list(
-                graph_structure)
+        self.connections_by_name: dict[tuple[str, str], Connection] = (
+                self._build_connections_by_name(
+                    graph_structure.connection_list))
+
+        self.adjacency_list: dict[str, list[str]] = (
+                self._build_adjacency_list(graph_structure))
+
+        # 何ターン目に何台ドローンがHubにいるか示す
+        # key: tuple[hub_name, turn]
+        # value: drone_num
+        self.reservation_table: dict[tuple[str, int], int]
+        # 何ターン目に何台ドローンがConnectionにいるか示す
+        self.reserve_conn_table: dict[tuple[tuple[str, str], int], int]
 
     def _build_hubs_by_name(self, hub_list: list[Hub]) -> dict[str, Hub]:
         hubs_by_name: dict[str, Hub] = {}
@@ -22,6 +35,15 @@ class PathFinder:
             hubs_by_name[hub.name] = hub
 
         return hubs_by_name
+
+    def _build_connections_by_name(
+            self, connection_list: list[Connection]
+            ) -> dict[tuple[str, str], Connection]:
+        connections_by_name: dict[tuple[str, str], Connection] = {}
+        for connection in connection_list:
+            connections_by_name[connection.connected_hub] = connection
+
+        return connections_by_name
 
     def _build_adjacency_list(
             self,
@@ -54,6 +76,9 @@ class PathFinder:
             graph: dict[str, list[str]],
             start: str) -> tuple[dict[str, float], dict[str, str]]:
 
+        # min_turns: dict[tuple[hub_name, turn], float]]にする
+        # turnとcost(float)は一致するので
+        # min_turns: set[tuple[hub_name, turn]]が最終型？
         min_turns: dict[str, float] = {node: float('inf') for node in graph}
         min_turns[start] = 0
 
@@ -97,6 +122,7 @@ class PathFinder:
                 self.adjacency_list,
                 self.start_hub
                 )
+        # 逆順でpathが得られるので、反転する
         while start_to_end[-1] != self.start_hub:
             if start_to_end[-1] not in prev:
                 return None
