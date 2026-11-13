@@ -2,7 +2,7 @@ import sys
 from map_data import MapData
 from algorithem import PathFinder
 from parser import MapParser, ParseError
-from simulation_engine import Drone, SimulationEngine
+from simulation_engine import SimulationEngine
 
 
 def flyin(map_file: str) -> None:
@@ -14,12 +14,13 @@ def flyin(map_file: str) -> None:
         print(f'connection_list: {map_data.graph_structure.connection_list}')
     except (ParseError, ValueError) as e:
         print(e)
+        return
 
-    path_finder = PathFinder(map_data.graph_structure)
+    pf = PathFinder(map_data.graph_structure)
     simulation_engine = SimulationEngine(
-            drone_nums = map_data.nb_drones,
-            path_finder = path_finder
-            )
+            drone_nums=map_data.nb_drones,
+            path_finder=pf)
+    simulation_engine.run_all_turns()
 
 
 if __name__ == '__main__':

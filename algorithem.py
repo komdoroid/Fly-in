@@ -43,6 +43,12 @@ class PathFinder:
 
         return adj_list
 
+    def get_start_instance(self) -> Hub:
+        return self.hubs_by_name[self.start_hub]
+
+    def get_end_instance(self) -> Hub:
+        return self.hubs_by_name[self.end_hub]
+
     def build_path_info(
             self,
             graph: dict[str, list[str]],

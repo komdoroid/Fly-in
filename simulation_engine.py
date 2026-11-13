@@ -14,9 +14,9 @@ class Drone:
                  id,
                  place,
                  path,) -> None:
-        self.id: int
-        self.place: Hub | tuple[str, str]
-        self.path: list[str]
+        self.id: int = id
+        self.place: Hub | tuple[str, str] = place
+        self.path: list[str] = path
         self.next_hub_index: int = 1
 
     def update_place(self, next_hub: Hub) -> None:
@@ -40,17 +40,20 @@ class Drone:
 
 
 class SimulationEngine:
-    def __init__(self) -> None:
+    def __init__(self,
+                 drone_nums: int,
+                 path_finder: PathFinder) -> None:
+        self.drone_nums: int = drone_nums
+        self.path_finder: PathFinder = path_finder
         self.drones: list[Drone] = self.build_drones()
-        self.drone_nums: int
-        self.path_finder: PathFinder
 
     def build_drones(self) -> list[Drone]:
         drones: list[Drone] = []
         for i in range(1, self.drone_nums + 1):
             path = self.path_finder.find_path()
-            drone = Drone(i, self.path_finder.start_hub, path)
-            self.drones.append(drone)
+            start_hub = self.path_finder.get_start_instance()
+            drone = Drone(i, start_hub, path)
+            drones.append(drone)
         return drones
 
     def log_processor(self, drone: Drone) -> str:
@@ -65,7 +68,10 @@ class SimulationEngine:
         Raises:
 
         """
-        return f"D{drone.id}-{drone.place}"
+        if isinstance(drone.place, Hub):
+            return f"D{drone.id}-{drone.place.name}"
+        if isinstance(drone.place, tuple):
+            return f"D{drone.id}-{"-".join(drone.place)}"
 
     def advance_one_turn(self) -> tuple[int, str]:
         """ 前ドローンの動きを１ターン進め、標準出力に情報を表示する。
