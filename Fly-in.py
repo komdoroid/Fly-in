@@ -2,6 +2,7 @@ import sys
 from map_data import MapData
 from algorithem import PathFinder
 from parser import MapParser, ParseError
+from simulation_engine import Drone, SimulationEngine
 
 
 def flyin(map_file: str) -> None:
@@ -15,7 +16,10 @@ def flyin(map_file: str) -> None:
         print(e)
 
     path_finder = PathFinder(map_data.graph_structure)
-    print(path_finder.find_path())
+    simulation_engine = SimulationEngine(
+            drone_nums = map_data.nb_drones,
+            path_finder = path_finder
+            )
 
 
 if __name__ == '__main__':
